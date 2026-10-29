@@ -1,0 +1,5 @@
+effect,arm_mean_ms,arm_p95_ms,fpga_mean_ms,fpga_p95_ms,arm_over_fpga_ratio,max_pixel_error,warmup_runs,measured_runs,scope
+smooth,7.682,8.022,11.582,11.889,0.66,0,3,10,FPGA includes padding packing DMA and copy; excludes decode compose display audio
+edge,32.228,33.753,11.535,11.641,2.79,0,3,10,FPGA includes padding packing DMA and copy; excludes decode compose display audio
+sharpen,15.505,15.634,11.670,11.966,1.33,0,3,10,FPGA includes padding packing DMA and copy; excludes decode compose display audio
+original,0.559,0.587,11.638,11.997,0.05,0,3,10,FPGA includes padding packing DMA and copy; excludes decode compose display audio

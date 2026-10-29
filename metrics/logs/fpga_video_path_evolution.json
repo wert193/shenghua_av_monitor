@@ -1,0 +1,56 @@
+{
+  "title": "Smooth 320x180 filter call on the FPGA path, before and after the copy/packing rework",
+  "stages": [
+    {
+      "stage": "before_buffer_copy_optimization",
+      "source_report": "video_fpga_before_copy_optimization.json",
+      "warmup": 3,
+      "repeats": 20,
+      "max_error": 0,
+      "ARM": {
+        "mean_ms": 7.608879,
+        "p95_ms": 7.695139
+      },
+      "FPGA": {
+        "mean_ms": 26.966313,
+        "p95_ms": 27.550705
+      },
+      "arm_over_fpga": 0.282162,
+      "scope": "Filter call; FPGA includes padding, packing, DMA and copy. Excludes decoding, composition, HDMI and audio."
+    },
+    {
+      "stage": "after_buffer_copy_optimization",
+      "source_report": "video_fpga_board_check.json",
+      "warmup": 3,
+      "repeats": 20,
+      "max_error": 0,
+      "ARM": {
+        "mean_ms": 7.593758,
+        "p95_ms": 7.660927
+      },
+      "FPGA": {
+        "mean_ms": 22.235622,
+        "p95_ms": 22.872044
+      },
+      "arm_over_fpga": 0.341513,
+      "scope": "Filter call; FPGA includes padding, packing, DMA and copy. Excludes decoding, composition, HDMI and audio."
+    },
+    {
+      "stage": "four_effect_build",
+      "source_report": "video_effects_board_check.json",
+      "warmup": 3,
+      "repeats": 10,
+      "max_error": 0,
+      "ARM": {
+        "mean_ms": 7.681894,
+        "p95_ms": 8.021616
+      },
+      "FPGA": {
+        "mean_ms": 11.582095,
+        "p95_ms": 11.888735
+      },
+      "arm_over_fpga": 0.663256,
+      "scope": "Same ARM implementation as live video. FPGA includes native padding/packing, DMA, and result unpacking. Excludes decoding, composition and HDMI."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "board": "PYNQ-Z2 / XC7Z020CLG400-1",
+  "build": "video_effects",
+  "tested_on": "2026-10-03",
+  "rtl_video_cases": 24,
+  "board_video_frames_per_mode": 12,
+  "modes": ["smooth", "edge", "sharpen", "original"],
+  "max_pixel_error": 0,
+  "full_mv_replays": 2,
+  "audio_samples_per_replay": 1440127,
+  "audio_underruns": 0,
+  "routed_timing": {
+    "wns_ns": 0.202,
+    "whs_ns": 0.018,
+    "tns_ns": 0,
+    "ths_ns": 0
+  },
+  "resources": {
+    "lut": 8484,
+    "lut_percent": 15.95,
+    "registers": 9839,
+    "registers_percent": 9.25,
+    "bram_tiles": 138,
+    "bram_tiles_available": 140,
+    "bram_percent": 98.57,
+    "dsp": 4,
+    "dsp_percent": 1.82
+  },
+  "limitations": [
+    "Playback samples follow the hardware audio counter; late video frames may be skipped.",
+    "Microbenchmark timings include FPGA data movement and exclude decode, composition, display, and audio.",
+    "HDMI register status does not verify physical reception by a monitor.",
+    "BRAM headroom is 2 tiles in this routed build."
+  ],
+  "evidence": "Summarized from the final board playback and comparison captures; private media, absolute paths, and per-frame logs are omitted.",
+  "reports_in_repository": [
+    "fpga/report/timing.rpt",
+    "fpga/report/utilization.rpt",
+    "fpga/report/drc.rpt",
+    "fpga/report/milestones/fir_only/timing.rpt",
+    "fpga/report/milestones/fir_only/utilization.rpt"
+  ]
+}

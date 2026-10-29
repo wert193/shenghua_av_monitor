@@ -1,0 +1,229 @@
+{
+  "title": "Whole-playback rounds: ARM first, then FPGA, 30 s each",
+  "settings": {
+    "video_mode": "smooth",
+    "video_kernel": [
+      [
+        1,
+        2,
+        1
+      ],
+      [
+        2,
+        4,
+        2
+      ],
+      [
+        1,
+        2,
+        1
+      ]
+    ],
+    "video_divisor": 16,
+    "border": "replicate",
+    "audio_mode": 0,
+    "audio_cutoff_hz": 800,
+    "audio_taps": 255,
+    "sample_rate": 48000,
+    "order": [
+      "ARM",
+      "FPGA"
+    ],
+    "coefficients_sha256": "389b6fc39cbf08e448c16b48540fafe38523636f6b23245264eafb0706b94346",
+    "video_algorithm": "binomial 3x3 /16, rounded"
+  },
+  "scope": {
+    "cpu": "Whole board /proc/stat busy percentage, normalized across all CPU cores; includes other processes. Iowait counted idle.",
+    "filter_ms": "Actual per-displayed-frame filter call; includes FPGA packing/DMA/copy and shared-DMA lock wait.",
+    "fps": "Displayed frames divided by hardware audio duration; includes full decode/composition/HDMI pipeline.",
+    "dropped": "Source frame count minus displayed frames, including skipped startup/end frames.",
+    "limitations": "One ARM then one FPGA run with fixed selected video mode; thermal/order/background load may affect results. Not optical/acoustic end-to-end latency."
+  },
+  "video_correctness": {
+    "scope": "Filter call; FPGA includes padding, packing, DMA and copy. Excludes decoding, composition, HDMI and audio.",
+    "warmup": 3,
+    "modes": [
+      {
+        "mode": "smooth",
+        "max_error": 0,
+        "passed": null,
+        "repeats": 20,
+        "ARM": {
+          "mean_ms": 7.666948,
+          "p95_ms": 7.692453
+        },
+        "FPGA": {
+          "mean_ms": 11.486084,
+          "p95_ms": 11.609197
+        },
+        "arm_over_fpga": 0.667499
+      }
+    ],
+    "passed": null
+  },
+  "audio_correctness": {
+    "scope": "compute_only_4096_pcm_samples",
+    "samples": 4096,
+    "sample_rate": 48000,
+    "warmups": 3,
+    "repeats": 3,
+    "input_sha256": "1f8becd1f7f849bf547f944866ea7443f9a12e8dbc001c2a4e8aecefec96d9d9",
+    "coefficients_sha256": "2f5e73c4cbf94f072bdb66b7f652b738b15394f24d7d71e0c08e59c457bd090f",
+    "modes": [
+      {
+        "mode": 0,
+        "name": "低通",
+        "max_error": 0,
+        "passed": true,
+        "times_ms": {
+          "ARM": [
+            15.224553,
+            15.201687,
+            15.27904
+          ],
+          "FPGA": [
+            7.673397,
+            7.685502,
+            7.443335
+          ]
+        },
+        "ARM": {
+          "mean_ms": 15.235093,
+          "p95_ms": 15.273591
+        },
+        "FPGA": {
+          "mean_ms": 7.600745,
+          "p95_ms": 7.684292
+        },
+        "speedup": 2.004421
+      },
+      {
+        "mode": 1,
+        "name": "高通",
+        "max_error": 0,
+        "passed": true,
+        "times_ms": {
+          "ARM": [
+            15.026302,
+            14.964265,
+            14.948671
+          ],
+          "FPGA": [
+            7.419354,
+            7.597249,
+            10.810634
+          ]
+        },
+        "ARM": {
+          "mean_ms": 14.979746,
+          "p95_ms": 15.020098
+        },
+        "FPGA": {
+          "mean_ms": 8.609079,
+          "p95_ms": 10.489295
+        },
+        "speedup": 1.739994
+      },
+      {
+        "mode": 2,
+        "name": "带通",
+        "max_error": 0,
+        "passed": true,
+        "times_ms": {
+          "ARM": [
+            15.098948,
+            15.07976,
+            15.147988
+          ],
+          "FPGA": [
+            7.489796,
+            7.544585,
+            7.360006
+          ]
+        },
+        "ARM": {
+          "mean_ms": 15.108899,
+          "p95_ms": 15.143084
+        },
+        "FPGA": {
+          "mean_ms": 7.464796,
+          "p95_ms": 7.539106
+        },
+        "speedup": 2.02402
+      },
+      {
+        "mode": 3,
+        "name": "原曲延时对齐",
+        "max_error": 0,
+        "passed": true,
+        "times_ms": {
+          "ARM": [
+            15.176936,
+            15.171458,
+            15.227797
+          ],
+          "FPGA": [
+            7.498185,
+            7.540258,
+            7.412517
+          ]
+        },
+        "ARM": {
+          "mean_ms": 15.192064,
+          "p95_ms": 15.222711
+        },
+        "FPGA": {
+          "mean_ms": 7.483653,
+          "p95_ms": 7.536051
+        },
+        "speedup": 2.030033
+      }
+    ],
+    "passed": true,
+    "timing_scope": "Wall time around Engine.compute: ARM includes allocation, ctypes and C FIR; FPGA includes register setup, cache maintenance, DMA, polling and output copy. Both reset history. Excludes file I/O, playback, mixing and display. Not end-to-end latency.",
+    "error_unit": "PCM16 integer sample",
+    "p95_method": "numpy.percentile linear interpolation"
+  },
+  "rounds": [
+    {
+      "round": 0,
+      "summary": {
+        "backend": "ARM",
+        "rendered_frames": 252,
+        "source_frames": 450,
+        "fps": 8.4,
+        "filter_mean_ms": 7.90653,
+        "filter_p95_ms": 9.327841,
+        "display_mean_ms": 35.467636,
+        "prepare_mean_ms": 82.84863,
+        "cpu_percent": 64.47564,
+        "dropped_frames": 198,
+        "audio_underruns": 0,
+        "audio_played": 1440127,
+        "audio_seconds": 30.0,
+        "wall_seconds": 30.691377,
+        "audio_log": "FIFO complete submitted=1440127 played=1440127 seconds=30.004804 expected=30.002646 underruns=0 stopped=0\n"
+      }
+    },
+    {
+      "round": 1,
+      "summary": {
+        "backend": "FPGA",
+        "rendered_frames": 249,
+        "source_frames": 450,
+        "fps": 8.3,
+        "filter_mean_ms": 12.401013,
+        "filter_p95_ms": 17.564545,
+        "display_mean_ms": 33.237077,
+        "prepare_mean_ms": 86.434671,
+        "cpu_percent": 59.094664,
+        "dropped_frames": 201,
+        "audio_underruns": 0,
+        "audio_played": 1440127,
+        "audio_seconds": 30.0,
+        "wall_seconds": 30.67081,
+        "audio_log": "FIFO complete submitted=1440127 played=1440127 seconds=30.003746 expected=30.002646 underruns=0 stopped=0\n"
+      }
+    }
+  ]
+}

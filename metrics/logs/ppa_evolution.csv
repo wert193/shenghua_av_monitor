@@ -1,0 +1,6 @@
+build,video_modes,lut,registers,bram_tiles,bram_available,wns_ns,whs_ns,notes
+fir_only,none,3336,4430,6,140,1.176,0.012,offline audio FIR overlay after the auxiliary-reset polarity fix
+live_audio,none,3664,4846,6,140,1.657,0.022,adds the official audio codec controller PS I2C1 EMIO and button/LED GPIO
+hdmi_single,one_arm,6633,8620,134,140,0.292,0.028,adds the 640x360 RGB332 double-buffered 720p60 HDMI scanout; BRAM jumps
+video_smooth,one,7939,9473,138,140,0.278,0.014,smooth filter moves onto the PL and shares the AXI DMA with the audio FIR
+video_effects,four,8484,9839,138,140,0.202,0.018,final routed build; adds Sobel edge and sharpen without a second frame buffer

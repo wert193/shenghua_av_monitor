@@ -1,0 +1,97 @@
+"""One-upload offline FPGA check. Stops/restarts the identified song service."""
+import base64
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import runpy
+import signal
+import subprocess
+import sys
+import time
+import urllib.request
+import urllib.error
+import zipfile
+
+PAYLOAD=__PAYLOAD__
+DIGEST=__DIGEST__
+
+def status():
+    try:
+        with urllib.request.urlopen('http://127.0.0.1:8080/api/status',timeout=2) as r:
+            return json.load(r)
+    except (urllib.error.URLError,TimeoutError):
+        return None
+
+def main():
+    if sys.platform!='linux': raise RuntimeError('请在开发板 Jupyter 内运行。')
+    parent=Path(__file__).resolve().parent
+    root=parent/('shenghua_live_'+DIGEST[:12])
+    raw=base64.b64decode(PAYLOAD)
+    if hashlib.sha256(raw).hexdigest()!=DIGEST: raise RuntimeError('安装包校验失败')
+    if not root.exists():
+        root.mkdir()
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            for member in z.infolist():
+                if root.resolve() not in (root/member.filename).resolve().parents:
+                    raise RuntimeError('Invalid archive path')
+            z.extractall(root)
+    manifest=json.loads((root/'manifest.json').read_text())
+    for name,digest in manifest.items():
+        if hashlib.sha256((root/name).read_bytes()).hexdigest()!=digest:
+            raise RuntimeError('文件校验失败：'+name)
+    import fcntl
+    lock=(parent/'shenghua_live.lock').open('a')
+    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    restart=None
+    current=status()
+    if current:
+        if current.get('project')!='shenghua': raise RuntimeError('8080 上不是作品服务，停止检查。')
+        candidates=[]
+        for installed in parent.glob('shenghua_*'):
+            try:
+                pid=int((installed/'data'/'server.pid').read_text())
+                argv=(Path('/proc')/str(pid)/'cmdline').read_bytes().decode().split(chr(0))
+                if (installed/'installed.sha256').is_file() and str(installed/'app.py') in argv:
+                    if current.get('pid') is None or current['pid']==pid: candidates.append((installed,pid))
+            except (OSError,ValueError): pass
+        if len(candidates)!=1: raise RuntimeError('无法确认作品服务进程，请先正常重启板子后只运行本文件。')
+        installed,pid=candidates[0]
+        if current['audio']['status'] in ('starting','running','stopping'):
+            raise RuntimeError('请先在作品页面点停止，等声音结束，再运行本文件。')
+        print('正在停止旧作品服务，准备启动当前版本。',flush=True)
+        os.kill(pid,signal.SIGTERM)
+        for _ in range(40):
+            command=Path('/proc')/str(pid)/'cmdline'
+            try: alive=bool(command.read_bytes())
+            except FileNotFoundError: alive=False
+            if not alive: break
+            time.sleep(.25)
+        else: raise RuntimeError('旧服务未能退出，尚未加载 FPGA。')
+        restart=installed
+    try:
+        sys.path.insert(0,str(root))
+        for name in ('run_live_audio','video_app','video_engine','usb_capture','usb_audio','alsa_capture','live_monitor','integrated_app','console_app','video_fpga','image_fpga','image_engine','image_filters','hdmi_display','round_benchmark','fir_driver','check_hardware'):
+            sys.modules.pop(name,None)
+        print('正在启动音视频监控服务。',flush=True)
+        runpy.run_path(str(root/'run_live_audio.py'),run_name='__main__')
+    finally:
+        if str(root) in sys.path: sys.path.remove(str(root))
+        if restart:
+            with (restart/'data'/'server.log').open('ab') as log:
+                p=subprocess.Popen([sys.executable,'-u',str(restart/'app.py')],cwd=str(restart),
+                    stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            (restart/'data'/'server.pid').write_text(str(p.pid))
+            for _ in range(30):
+                if p.poll() is not None:
+                    print('旧页面重启失败，请重新运行原作品启动文件。',flush=True)
+                    break
+                if status():
+                    print('旧作品页面已恢复，请访问开发板地址的 8080 端口。',flush=True)
+                    break
+                time.sleep(.5)
+            else: print('旧页面尚未就绪，请重新运行原作品启动文件。',flush=True)
+        lock.close()
+
+if __name__=='__main__': main()

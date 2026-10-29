@@ -1,0 +1,37 @@
+# Generated Vivado / Vitis projects, caches and simulator output
+fpga/src/build/
+fpga/.Xil/
+.Xil/
+NA/
+*.jou
+*.log
+*.str
+*.dcp
+*.rpx
+*.vdb
+*.wdb
+*.pyc
+*.pyo
+__pycache__/
+.pytest_cache/
+.venv/
+
+# Private media, prepared clips and the generated single-file board launcher
+host/media/
+dist/
+*.mp4
+*.mkv
+*.mov
+*.mpg
+*.mpeg
+*.avi
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.webm
+
+# Raw board measurements: only the scrubbed summaries under metrics/logs/
+# (produced by host/deploy/summarize_board_reports.py) are versioned.
+metrics/logs/*.raw.json
+metrics/logs/video_effects_board_check.json
