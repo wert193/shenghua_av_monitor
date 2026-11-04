@@ -1,0 +1,13 @@
+Tool: Vivado Simulator 2024.1
+Top: tb_video_effects
+Inputs: video_smooth_router.v and tb_video_effects.v from this repository
+Vectors: 24 mode/frame cases; pixel counts vary by case.
+Result: PASS 24/24
+
+Coverage reported by the testbench: four effects/routing modes, random pixels,
+maximum 320x240 frame, one-pixel and one-dimensional frames, saturation,
+replicated borders, input backpressure, consecutive frames, and audio bypass.
+
+Re-run: generate vectors with fpga/src/scripts/video_effects_vectors.py, then
+run xvlog, xelab and xsim from fpga/src/build/video_effects_sim as documented
+in README.md. Generated simulator files are intentionally not versioned.

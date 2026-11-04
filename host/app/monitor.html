@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>音视频监控系统 · 电脑摄像头/麦克风实时监控</title>
+<style>
+:root{--bg:#f1f5f9;--ink:#203249;--muted:#6b7e93;--line:#dfe7ef;--blue:#2463df;--green:#07836a;--warn:#fff2e9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "Segoe UI","Microsoft YaHei",sans-serif}
+header{background:linear-gradient(120deg,#12273e,#203e5c);color:#fff;padding:26px max(22px,calc((100vw - 1220px)/2));display:flex;align-items:center;gap:22px;border-bottom:3px solid #4383e7}
+h1{font-size:25px;margin:0;letter-spacing:1px}header p{margin:4px 0 0;color:#b5cbdc;font-size:13px}
+.nav{display:flex;gap:8px;margin-left:auto}.nav a{color:#c8d8e6;text-decoration:none;padding:8px 13px;border-radius:9px;font-size:13px}
+.nav a:hover,.nav a.active{background:#ffffff18;color:#fff}
+main{max-width:1220px;margin:auto;padding:24px 22px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:23px;margin-bottom:20px;box-shadow:0 5px 22px #20324905}
+h2{margin:0 0 7px;font-size:19px}h3{margin:20px 0 8px;font-size:15px}
+.sub{color:var(--muted);font-size:13px;margin:4px 0 15px}
+.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+button{border:1px solid var(--line);border-radius:9px;min-height:41px;padding:8px 13px;background:#fff;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+button:hover{border-color:var(--blue)}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.active{background:#edf3ff;color:var(--blue);border-color:#8fb0f5}button:disabled{opacity:.5;cursor:not-allowed}
+.state{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:#b9c6d2}.dot.on{background:var(--green)}
+.views{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}
+.pane{background:#182634;border-radius:11px;overflow:hidden;min-width:0}
+.pane video,.pane img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#111}
+.pane span{display:block;padding:8px 11px;color:#d5e1ed;font-size:12px;background:#203249}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 14px;font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+.kv span:nth-child(odd){color:var(--muted)}
+.channel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:8px 0 16px}
+.channel-grid label{display:grid;gap:4px;color:var(--muted);font-size:12px}
+.channel-grid select{border:1px solid var(--line);border-radius:8px;padding:7px;background:#fff;color:var(--ink)}
+.notice{display:none;padding:12px 15px;margin-bottom:16px;border:1px solid #f0cbb2;background:var(--warn);color:#8a3d19;border-radius:10px}
+.note{background:#f6f8fc;border:1px solid #e8edf4;border-radius:10px;padding:11px 13px;color:var(--muted);font-size:12px;margin-top:14px}
+pre{white-space:pre-wrap;word-break:break-word;background:#142536;color:#d2e1ed;padding:12px;border-radius:9px;font-size:12px;max-height:220px;overflow:auto}
+footer{color:var(--muted);font-size:12px;padding:4px 2px}
+canvas{display:block;width:100%;height:180px;border:1px solid var(--line);border-radius:10px;background:#fff}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.channel-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){body{font-size:14px}main{padding:16px 12px}.card{padding:17px}.views{grid-template-columns:1fr}.channel-grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><div><h1>音视频监控系统</h1><p>电脑摄像头 + 电脑麦克风 · 板端实时滤波与 HDMI 输出</p></div>
+<nav class="nav" aria-label="主导航"><a href="/">实时演示</a><a class="active" href="/monitor">实时监控</a></nav></header>
+<main><div id="notice" class="notice" role="alert"></div>
+<div class="grid"><section>
+<div class="card"><h2>电脑采集</h2>
+<p class="sub">摄像头与麦克风使用运行本页的电脑，画面和 48 kHz PCM 送到 PYNQ-Z2 做 ARM/FPGA 滤波；开发板回传处理结果与滤波后音频。电脑只负责采集、显示和出声，不参与滤波。</p>
+<div class="row"><button id="start" class="primary">启动电脑摄像头与麦克风</button><button id="stop" disabled>停止</button><button id="audioOut">电脑扬声器：开</button><span class="state"><i id="dot" class="dot"></i><span id="state">等待启动</span></span></div>
+<div class="views"><div class="pane"><video id="rawCamera" autoplay muted playsinline></video><span>电脑摄像头 · 原始画面</span></div><div class="pane"><img id="result" alt="开发板处理结果"><span id="resultLabel">开发板处理结果</span></div></div>
+<div class="sub" style="margin:16px 0 6px">视频效果（独立选择）</div>
+<div class="row" id="videoModes"><button data-mode="original">原图</button><button data-mode="smooth">平滑</button><button data-mode="edge">边缘提取</button><button data-mode="sharpen">锐化</button></div>
+<div class="sub" style="margin:16px 0 6px">音频效果（独立选择）</div>
+<div class="row" id="audioModes"><button data-mode="0">低通</button><button data-mode="1">高通</button><button data-mode="2">带通</button></div>
+<h3>六项处理通道</h3>
+<div class="channel-grid" id="channelGrid"><label>视频 · 平滑<select data-kind="video" data-effect="smooth"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label><label>视频 · 边缘提取<select data-kind="video" data-effect="edge"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label><label>视频 · 锐化<select data-kind="video" data-effect="sharpen"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label><label>音频 · 低通<select data-kind="audio" data-effect="0"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label><label>音频 · 高通<select data-kind="audio" data-effect="1"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label><label>音频 · 带通<select data-kind="audio" data-effect="2"><option value="ARM">ARM</option><option value="FPGA">FPGA</option></select></label></div>
+<div class="note">浏览器只允许在安全来源使用摄像头/麦克风。请先用 <code>python host/deploy/tools/camera_proxy.py --board http://&lt;板卡IP&gt;:8080</code> 启动本地代理，再打开 <code>http://localhost:8765/monitor</code>；直接打开 <code>http://&lt;板卡IP&gt;:8080</code> 时浏览器会拒绝采集权限。用耳机可避免麦克风与扬声器啸叫。</div>
+</div>
+<div class="card"><h2>采集与处理状态</h2><div class="kv">
+<span>画面帧数</span><span id="frames">0</span><span>显示帧率</span><span id="fps">0 FPS</span>
+<span>最近一帧滤波时间</span><span id="videoMs">—</span><span>最近一块音频滤波时间</span><span id="audioMs">—</span>
+<span>当前通道</span><span id="backend">ARM / 视频；ARM / 音频</span><span>当前模式</span><span id="mode">平滑 / 低通</span>
+<span>采集来源</span><span id="captureSource">电脑浏览器</span><span>声音输出</span><span id="audioOutput">电脑扬声器</span>
+<span>HDMI 当前视图</span><span id="hdmiView">实时画面</span></div>
+<h2 style="margin-top:22px">实时音频波形</h2><p id="waveLabel" class="sub">琥珀色为电脑麦克风输入，绿色为 FIR 输出；纵轴自动缩放。</p>
+<canvas id="audioWave" height="180"></canvas><p id="waveMetrics" class="sub">等待音频采样</p></div>
+</section><aside>
+<div class="card"><h2>工作方式</h2><p class="sub">电脑摄像头帧缩放到 320×240 后经 HTTP 送到开发板，由 ARM 或 FPGA 滤波；电脑麦克风以 48 kHz PCM 分块送入同一套 255 抽头 FIR。处理后的画面回到网页并送到 HDMI；滤波后的 PCM 回到网页，由电脑扬声器或耳机播放。</p><div class="note">这是低帧率单路演示链路，不是多路并行监控。页面帧率包含摄像头采集、HTTP、JPEG、滤波和显示；声音有采集/网络/分块处理延迟，不代表端到端声学延迟。</div></div>
+<div class="card"><h2>打开方式</h2><p class="sub">在演示电脑的项目目录运行：</p><pre>python host/deploy/tools/camera_proxy.py --board http://&lt;板卡IP&gt;:8080</pre><p class="sub">保持窗口运行，浏览器打开 <code>http://localhost:8765/monitor</code>，允许摄像头和麦克风权限。</p><div class="note">代理只监听 127.0.0.1，把页面和 API 转发到开发板；不要在板卡 IP 的 8080 页面直接点启动，否则浏览器会以“非安全来源”拒绝摄像头/麦克风。</div></div>
+<div class="card"><h2>运行提示</h2><p class="sub">启动前先停止第一页的歌曲播放、视频播放和性能测量，避免共享 DMA 冲突。若画面掉帧或声音断续：关闭其他占用 CPU 的程序、降低摄像头分辨率、换用 5 GHz/有线网络，并确认板卡没有同时跑其他作品服务。</p><p class="sub">HDMI 的 BTN3 可在“实时画面”和“音频波形/频谱”之间切换。停止后摄像头、麦克风和音频上下文都会释放。</p></div>
+</aside></div><footer>电脑负责摄像头/麦克风采集与显示；PYNQ-Z2 负责 ARM/FPGA 滤波、HDMI 与板载状态。</footer></main>
+<script>
+const $=id=>document.getElementById(id);
+const labels={original:'原图',smooth:'平滑',edge:'边缘提取',sharpen:'锐化'};
+const audioLabels={0:'低通',1:'高通',2:'带通'};
+let active=false,stream=null,audioCtx=null,sourceNode=null,processor=null,zeroGain=null;
+let frameTimer=0,frameBusy=false,audioBusy=false,playAudio=true,nextPlay=0,lastUrl='';
+const canvas=document.createElement('canvas');canvas.width=320;canvas.height=240;
+function notice(text){$('notice').textContent=text||'';$('notice').style.display=text?'block':'none'}
+async function getJson(path){const r=await fetch(path,{cache:'no-store'});const j=await r.json();if(!r.ok)throw Error(j.error||('HTTP '+r.status));return j}
+async function postJson(path,data={}){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error||('HTTP '+r.status));return j}
+function readChannels(){const video_backends={},audio_backends={};document.querySelectorAll('#channelGrid select').forEach(s=>(s.dataset.kind==='video'?video_backends:audio_backends)[s.dataset.effect]=s.value);return {video_backends,audio_backends}}
+async function startCapture(){
+  if(active)return;
+  notice('');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    notice('当前浏览器不支持摄像头/麦克风采集；请使用 Chrome/Edge，并通过 http://localhost:8765/monitor 打开。');return;
+  }
+  try{
+    await postJson('/api/monitor/preset',readChannels());
+    await postJson('/api/monitor/start');
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:15}},audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const video=$('rawCamera');video.srcObject=stream;await video.play();
+    active=true;
+    $('start').disabled=true;$('stop').disabled=false;$('dot').classList.add('on');$('state').textContent='电脑摄像头 + 麦克风采集中';
+    startAudio();
+    clearInterval(frameTimer);frameTimer=setInterval(captureFrame,120);
+    captureFrame();pollWave();
+  }catch(e){
+    active=false;
+    try{await postJson('/api/monitor/stop')}catch(_){}
+    stopTracks();
+    const message=String(e&&e.message||e);
+    notice(message.includes('Permission')||message.includes('NotAllowed')?'请允许浏览器使用摄像头和麦克风。':('启动失败：'+message+'。请确认通过 http://localhost:8765/monitor 打开。'));
+  }
+}
+function stopTracks(){
+  if(stream){stream.getTracks().forEach(t=>{try{t.stop()}catch(_){}});stream=null}
+  const video=$('rawCamera');video.srcObject=null;
+}
+function startAudio(){
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:48000});
+  audioCtx.resume().catch(()=>{});
+  sourceNode=audioCtx.createMediaStreamSource(stream);
+  processor=audioCtx.createScriptProcessor(4096,1,1);
+  processor.onaudioprocess=onAudio;
+  zeroGain=audioCtx.createGain();zeroGain.gain.value=0;
+  sourceNode.connect(processor);processor.connect(zeroGain);zeroGain.connect(audioCtx.destination);
+  nextPlay=0;
+}
+function resampleTo48(input,rate){
+  if(Math.abs(rate-48000)<1)return input;
+  const length=Math.max(1,Math.round(input.length*48000/rate));
+  const out=new Float32Array(length),step=rate/48000;
+  for(let i=0;i<length;i++){
+    const position=i*step,index=Math.floor(position),frac=position-index;
+    const a=input[Math.min(index,input.length-1)],b=input[Math.min(index+1,input.length-1)];
+    out[i]=a+(b-a)*frac;
+  }
+  return out;
+}
+function onAudio(event){
+  if(!active||audioBusy||!audioCtx)return;
+  const input=event.inputBuffer.getChannelData(0);
+  const samples=resampleTo48(input,event.inputBuffer.sampleRate);
+  const pcm=new Int16Array(samples.length);
+  for(let i=0;i<samples.length;i++)pcm[i]=Math.max(-32768,Math.min(32767,Math.round(samples[i]*32767)));
+  audioBusy=true;
+  fetch('/api/monitor/audio',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:pcm.buffer})
+    .then(async response=>{if(!response.ok)throw Error('音频处理 HTTP '+response.status);return response.arrayBuffer()})
+    .then(buffer=>{if(playAudio&&active)playPcm16(new Int16Array(buffer))})
+    .catch(()=>{}).finally(()=>{audioBusy=false});
+}
+function playPcm16(pcm){
+  if(!audioCtx||!pcm.length)return;
+  const data=new Float32Array(pcm.length);
+  for(let i=0;i<pcm.length;i++)data[i]=pcm[i]/32768;
+  const buffer=audioCtx.createBuffer(1,data.length,48000);buffer.copyToChannel(data,0);
+  const source=audioCtx.createBufferSource();source.buffer=buffer;source.connect(audioCtx.destination);
+  const now=audioCtx.currentTime;
+  if(nextPlay<now+0.02)nextPlay=now+0.04;
+  if(nextPlay-now>0.6)nextPlay=now+0.04;
+  source.start(nextPlay);nextPlay+=buffer.duration;
+}
+function captureFrame(){
+  if(!active||frameBusy)return;
+  const video=$('rawCamera');
+  if(!video.videoWidth||video.readyState<2)return;
+  const context=canvas.getContext('2d');
+  context.drawImage(video,0,0,canvas.width,canvas.height);
+  canvas.toBlob(async blob=>{
+    if(!blob)return;
+    frameBusy=true;
+    try{
+      const response=await fetch('/api/monitor/frame',{method:'POST',headers:{'Content-Type':'image/jpeg'},body:blob});
+      if(!response.ok)throw Error('HTTP '+response.status);
+      const result=await response.blob(),url=URL.createObjectURL(result),image=$('result');
+      image.src=url;if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=url;
+    }catch(e){notice('画面处理失败：'+e.message)}finally{frameBusy=false}
+  },'image/jpeg',.72);
+}
+async function stopCapture(){
+  active=false;clearInterval(frameTimer);frameTimer=0;
+  try{await postJson('/api/monitor/stop')}catch(e){notice(e.message)}
+  if(processor){processor.disconnect();processor.onaudioprocess=null;processor=null}
+  if(sourceNode){sourceNode.disconnect();sourceNode=null}
+  if(zeroGain){zeroGain.disconnect();zeroGain=null}
+  if(audioCtx){try{await audioCtx.close()}catch(_){}audioCtx=null}
+  stopTracks();
+  $('start').disabled=false;$('stop').disabled=true;$('dot').classList.remove('on');$('state').textContent='已停止';
+  notice('');
+}
+async function setMode(kind,mode){return postJson('/api/monitor/preset',kind==='video'?{video_mode:mode}:{audio_mode:Number(mode)})}
+async function setChannel(){return postJson('/api/monitor/preset',readChannels())}
+function drawWave(data){
+  const target=$('audioWave'),context=target.getContext('2d'),w=target.width=target.clientWidth,h=target.height=180;
+  context.clearRect(0,0,w,h);context.fillStyle='#fbfcfe';context.fillRect(0,0,w,h);
+  context.strokeStyle='#e6edf5';context.lineWidth=1;
+  for(let i=1;i<4;i++){const y=h*i/4;context.beginPath();context.moveTo(0,y);context.lineTo(w,y);context.stroke()}
+  const raw=data.raw||[],filtered=data.filtered||[];
+  if(!raw.length&&!filtered.length){context.fillStyle='#6b7e93';context.font='12px sans-serif';context.fillText('等待音频采样',10,22);return}
+  const all=raw.concat(filtered);let peak=1;for(const value of all)peak=Math.max(peak,Math.abs(Number(value)||0));
+  const scale=Math.min(32768,peak*1.15);
+  function line(values,color){
+    if(values.length<2)return;context.strokeStyle=color;context.lineWidth=1.2;context.beginPath();
+    values.forEach((value,index)=>{const x=index*(w-1)/(values.length-1),y=h/2-(Number(value)/scale)*(h/2-8);index?context.lineTo(x,y):context.moveTo(x,y)});
+    context.stroke();
+  }
+  line(raw,'#c98a2e');line(filtered,'#07836a');
+  context.fillStyle='#6b7e93';context.font='11px sans-serif';
+  context.fillText('输入',8,14);context.fillText('输出',52,14);context.fillText('±'+Math.round(scale),w-72,14);
+}
+let waveBusy=false;
+async function pollWave(){
+  if(active&&!waveBusy){
+    waveBusy=true;
+    try{drawWave(await getJson('/api/monitor/waveform'))}catch(_){}
+    finally{waveBusy=false}
+  }
+  setTimeout(pollWave,600);
+}
+async function poll(){
+  try{
+    const state=await getJson('/api/status'),monitor=state.live_monitor;
+    if(!monitor)throw Error('服务未返回实时监控状态');
+    $('frames').textContent=monitor.frames||0;
+    $('fps').textContent=Number(monitor.fps||0).toFixed(1)+' FPS';
+    $('videoMs').textContent=Number(monitor.video_ms||0).toFixed(2)+' ms';
+    $('audioMs').textContent=Number(monitor.audio_ms||0).toFixed(2)+' ms';
+    $('backend').textContent=monitor.video_backend+' / 视频；'+monitor.audio_backend+' / 音频';
+    $('mode').textContent='视频 '+labels[monitor.video_mode]+'；音频 '+audioLabels[monitor.audio_mode];
+    $('resultLabel').textContent=monitor.video_backend+' / '+labels[monitor.video_mode];
+    $('captureSource').textContent=monitor.source==='browser'?'电脑浏览器':'板端';
+    $('audioOutput').textContent=playAudio?'电脑扬声器':'关闭';
+    $('hdmiView').textContent=monitor.display_mode==='audio'?'音频波形与频谱':'实时画面';
+    $('waveMetrics').textContent='输入 RMS '+Number(monitor.audio_level||0).toFixed(1)+' / 32768';
+    document.querySelectorAll('#videoModes button').forEach(b=>b.classList.toggle('active',b.dataset.mode===monitor.video_mode));
+    document.querySelectorAll('#audioModes button').forEach(b=>b.classList.toggle('active',Number(b.dataset.mode)===Number(monitor.audio_mode)));
+    document.querySelectorAll('#channelGrid select').forEach(select=>{
+      select.value=(select.dataset.kind==='video'?monitor.video_backends:monitor.audio_backends)[select.dataset.effect]||'ARM';
+      const fpga=select.querySelector('option[value="FPGA"]');
+      fpga.disabled=select.dataset.kind==='video'?!(state.video_fpga_modes||[]).includes(select.dataset.effect):!state.audio_fpga_available;
+    });
+    if(monitor.error)notice(monitor.error);else if(active)notice('');
+  }catch(e){notice('状态显示异常：'+e.message)}
+  setTimeout(poll,600);
+}
+document.querySelectorAll('#videoModes button').forEach(b=>b.onclick=async()=>{try{await setMode('video',b.dataset.mode);notice('')}catch(e){notice(e.message)}});
+document.querySelectorAll('#audioModes button').forEach(b=>b.onclick=async()=>{try{await setMode('audio',b.dataset.mode);notice('')}catch(e){notice(e.message)}});
+document.querySelectorAll('#channelGrid select').forEach(s=>s.onchange=async()=>{try{await setChannel();notice('')}catch(e){notice(e.message);await poll()}});
+$('start').onclick=startCapture;$('stop').onclick=stopCapture;
+$('audioOut').onclick=()=>{playAudio=!playAudio;if(!playAudio)nextPlay=0;$('audioOut').textContent='电脑扬声器：'+(playAudio?'开':'关');$('audioOutput').textContent=playAudio?'电脑扬声器':'关闭'};
+async function initialize(){
+  if(!['localhost','127.0.0.1'].includes(location.hostname)){
+    notice('浏览器只允许在 localhost 或 HTTPS 下使用摄像头/麦克风。请运行 host/deploy/tools/camera_proxy.py，再打开 http://localhost:8765/monitor。');
+  }
+  const params=new URLSearchParams(location.search);
+  try{
+    if(params.get('source')==='measured-video'){
+      const settings={},vm=params.get('vm'),am=params.get('am');
+      if(vm)settings.video_mode=vm;
+      if(am!==null)settings.audio_mode=Number(am);
+      settings.video_backends={smooth:params.get('vb_smooth')||'ARM',edge:params.get('vb_edge')||'ARM',sharpen:params.get('vb_sharpen')||'ARM'};
+      settings.audio_backends={'0':params.get('ab_0')||'ARM','1':params.get('ab_1')||'ARM','2':params.get('ab_2')||'ARM'};
+      await postJson('/api/monitor/preset',settings);
+      $('state').textContent='已载入方案，等待启动';
+    }
+  }catch(e){notice(e.message)}
+  await poll();pollWave();
+}
+initialize();
+window.addEventListener('beforeunload',()=>{if(navigator.sendBeacon)navigator.sendBeacon('/api/monitor/stop',new Blob(['{}'],{type:'application/json'}))});
+</script></body></html>

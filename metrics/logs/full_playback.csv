@@ -1,0 +1,7 @@
+effect,backend,processed_fps,filter_mean_ms,filter_p95_ms,cpu_percent,source_frames,rendered_frames,dropped_frames,audio_samples,audio_underruns
+smooth,ARM,8.4,7.907,9.328,64.48,450,252,198,1440127,0
+smooth,FPGA,8.3,12.401,17.565,59.09,450,249,201,1440127,0
+edge,ARM,7.3,29.682,34.250,65.18,450,219,231,1440127,0
+edge,FPGA,8.3,12.367,17.585,58.64,450,249,201,1440127,0
+sharpen,ARM,7.9,13.702,15.731,65.18,450,237,213,1440127,0
+sharpen,FPGA,8.2,12.550,17.676,59.01,450,246,204,1440127,0

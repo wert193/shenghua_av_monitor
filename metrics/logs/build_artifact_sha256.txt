@@ -1,0 +1,2 @@
+778d52b6ed75a4d0c7071b765e6935accb3222f5d1564ddc56ef92c67b6374b5  fpga/build/audio_live.bit
+933bb11834d6f52ff9d2fa68262d9ca360c1e70b7599a971c97234cd417c22fb  fpga/build/audio_live.hwh

@@ -1,0 +1,25 @@
+# Normalize text files to LF in the repository, but never touch binary or data files.
+* text=auto
+
+# Shell scripts must keep LF endings so they stay executable on Linux/macOS/WSL.
+*.sh text eol=lf
+
+# Build artifacts and media
+*.bit binary
+*.hwh binary
+*.dcp binary
+*.avi binary
+*.mp4 binary
+*.mkv binary
+*.mp3 binary
+*.wav binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+
+# Fixed test data must be byte-identical on every platform: the RTL testbench
+# reads vectors.hex with $readmemh and the golden traces are binary fixtures.
+*.hex binary
+*.f32 binary
+*.u8 binary
+*.s16le binary

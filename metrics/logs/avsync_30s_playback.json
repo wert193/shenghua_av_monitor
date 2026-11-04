@@ -1,0 +1,33 @@
+{
+  "title": "Synchronized 30 s playback driven by the hardware audio clock",
+  "wall_seconds": 30.703,
+  "audio_clock": {
+    "seconds": 30.0,
+    "played": 1440127,
+    "underruns": 0,
+    "level": 0,
+    "started": true,
+    "finished": true
+  },
+  "audio_mode": 2,
+  "audio_backend": "ARM",
+  "audio_last_log": "FIFO complete submitted=1440127 played=1440127 seconds=30.004121 expected=30.002646 underruns=0 stopped=0\n",
+  "video": {
+    "mode": "smooth",
+    "backend": "ARM",
+    "fps": 7.27,
+    "filter_ms": 7.657,
+    "display_ms": 30.645,
+    "frame": 450,
+    "frames_total": 450,
+    "dropped": 232,
+    "synchronized": true,
+    "sync_error_ms": -1.75
+  },
+  "hdmi": {
+    "status": "output_active",
+    "format": "1280x720 / 60 Hz",
+    "canvas": "640x360 RGB332",
+    "frames": 219
+  }
+}

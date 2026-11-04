@@ -1,0 +1,22 @@
+{
+  "repository": "https://github.com/Xilinx/PYNQ",
+  "commit": "e054c09c52db3244ef35c8ae08a2e62c1e4955fd",
+  "local_variants": {
+    "audio_fifo_ctrl_v1.0\\src\\user_logic.vhd": "Locally modified IP implementation used in the final Vivado build."
+  },
+  "files": {
+    "audio_fifo_ctrl_v1.0\\component.xml": "2125cbd18cc93914d15dd39b456f8204e6df6f79c6593ffd9f8819add9074cd9",
+    "audio_fifo_ctrl_v1.0\\src\\address_decoder.vhd": "a95c77e2ef798a57f0e9cfbf3649628267518a1cc460c6d1cdef93d1f30114c4",
+    "audio_fifo_ctrl_v1.0\\src\\axi_lite_ipif.vhd": "3eafc1f5ef30e172dbf712c141c044635fb7f7629abcc2839c7e2463a58e47dd",
+    "audio_fifo_ctrl_v1.0\\src\\common_types.vhd": "c6c401e60135058f25dd4f01325f8b69ecd534f24c76703c965e50ad7d1fa752",
+    "audio_fifo_ctrl_v1.0\\src\\family_support.vhd": "bcb3af2a112ef3aaf2b06e56cefb2e4eb15d7db192c312bf17620ed7330caf8e",
+    "audio_fifo_ctrl_v1.0\\src\\i2s_ctrl.vhd": "3bae8a8a9f6bb07b6e93b6b7da602bf75e906729916e58330bfd80941e8b659a",
+    "audio_fifo_ctrl_v1.0\\src\\iis_deser.vhd": "af72dd1856a870e63b4e8cd5c69ea2ceeedae35fb788d9029db568711e533b12",
+    "audio_fifo_ctrl_v1.0\\src\\iis_ser.vhd": "0ca9f3da00c5c411cbabb8b32792444366178227c7a5d0005ed26665156268d8",
+    "audio_fifo_ctrl_v1.0\\src\\pselect_f.vhd": "36a3570f59f66bc16bddf5ea3c2dfeec1c5efe64eb886afc44745d2e4f1651c9",
+    "audio_fifo_ctrl_v1.0\\src\\slave_attachment.vhd": "019511c090eb03afb5b2ed0655ca77eaf5ddb75a7af77cc5a6baf5b7ee5a35a2",
+    "audio_fifo_ctrl_v1.0\\src\\user_logic.vhd": "ff309f94628686cc75708568e92c591e605691ed2758ca17b174a728f48ad3b2",
+    "audio_fifo_ctrl_v1.0\\xgui\\audio_codec_ctrl_v1_0.tcl": "5fab564f8703c743892beb941aecb1e812345e9b2789d42aae0376777994f573",
+    "audio_fifo_ctrl_v1.0\\xgui\\i2s_ctrl_v1_0.tcl": "b768b7e05dbbf75702ac12a93ad51fcade22b71733eca605de1fd3237e6e6069"
+  }
+}

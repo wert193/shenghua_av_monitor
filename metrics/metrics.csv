@@ -1,0 +1,42 @@
+指标名称,类别,数值,单位,测量条件,测试次数/时长,证据文件
+视频滤波耗时-平滑-ARM,核心,7.682,ms,"PYNQ-Z2/XC7Z020；PYNQ 3.1；Vivado/HLS 2024.1；PL 100 MHz 固定；板卡常压无调频；输入 320x180 BGR888（3x3 内核，复制边界）；ARM 后端 OpenCV 3x3，不含解码/合成/显示/音频",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-平滑-FPGA,核心,11.582,ms,"同上输入与版本；FPGA 后端含边界填充、BGR888 打包、AXI-DMA 传输、结果回拷与解包；不含解码/合成/显示/音频",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-边缘提取-ARM,核心,32.228,ms,"同上输入与版本；ARM 后端整数亮度 Sobel（(29R+150G+77B+128)>>8）",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-边缘提取-FPGA,核心,11.535,ms,"同上输入与版本；RTL 三级流水，config_word[21:20]=1",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-锐化-ARM,核心,15.505,ms,"同上输入与版本；ARM 后端 5c-t-b-l-r 饱和到 0..255",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-锐化-FPGA,核心,11.670,ms,"同上输入与版本；config_word[21:20]=2",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-原画直通-ARM,核心,0.559,ms,"同上输入与版本；仅内存拷贝，不做运算",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频滤波耗时-原画直通-FPGA,核心,11.638,ms,"同上输入与版本；config_word[21:20]=3（直通仍走完整 DMA 通道）",预热 3 次 + 测量 10 次,metrics/logs/video_filter_microbenchmark.csv
+视频逐像素最大误差,正确性,0,灰度级,"同一输入、同一效果，ARM 与 FPGA 输出逐像素比对；四效果 × 24 组 RTL 用例 + 板端每模式 12 帧",RTL 24 组 + 板端 48 帧,metrics/logs/board_validation.json
+板端逐像素核对通过率,正确性,48/48,帧,"四种效果各 12 帧，板端实测后与 ARM 参考逐像素核对",48 帧,metrics/logs/video_effects_board_check.summary.json
+RTL 仿真用例通过率,正确性,24/24,用例,"tb_video_effects 覆盖四模式、随机像素、1x1/1x19/17x1、240x320 棋盘、脉冲边界、饱和、AXI 背压、连续帧、音频旁路",24 组用例,metrics/logs/rtl_simulation.txt
+音频 FIR 耗时-低通-ARM,核心,15.235,ms,"PYNQ-Z2/XC7Z020；PYNQ 3.1；48 kHz 标称 PCM16 单声道；输入 4096 样本；255 抽头 Q1.15 FIR（累加不舍入，最后一次舍入并饱和）；compute-only，不含文件 IO/播放/显示",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频 FIR 耗时-低通-FPGA,核心,7.601,ms,"同上输入与版本；HLS audio_fir IP + AXI-DMA，含寄存器配置、缓存维护、轮询与回拷",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频 FIR 耗时-高通-ARM,核心,14.980,ms,"同上；模式 1（3000 Hz 以上，谱反转构造）",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频 FIR 耗时-高通-FPGA,核心,8.609,ms,"同上；模式 1",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频 FIR 耗时-带通-ARM,核心,15.109,ms,"同上；模式 2（800-2500 Hz 差分构造）",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频 FIR 耗时-带通-FPGA,核心,7.465,ms,"同上；模式 2",预热 3 次 + 重复 3 次,metrics/logs/full_playback_rounds.json
+音频逐样本最大误差,正确性,0,LSB,"四模式 × 4096 样本，ARM 与 FPGA 输出逐样本比对（含符号极值、饱和、环形回卷、分块连续）",4 模式 × 4096 样本,metrics/logs/full_playback_rounds.json
+完整播放显示帧率-平滑-ARM,系统,8.4,FPS,"同源 30 秒素材（15 FPS、450 帧、320x180 处理区）；ARM 滤波；帧率=显示帧数/硬件音频时长，含解码、合成、HDMI 写入",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放显示帧率-平滑-FPGA,系统,8.3,FPS,"同上；FPGA 滤波",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放显示帧率-边缘提取-ARM,系统,7.3,FPS,"同上；ARM 边缘提取",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放显示帧率-边缘提取-FPGA,系统,8.3,FPS,"同上；FPGA 边缘提取",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放显示帧率-锐化-ARM,系统,7.9,FPS,"同上；ARM 锐化",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放显示帧率-锐化-FPGA,系统,8.2,FPS,"同上；FPGA 锐化",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放滤波均值-边缘提取-ARM,系统,29.682,ms,"同上；滤波段均值（含 P95 34.250 ms）",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放滤波均值-边缘提取-FPGA,系统,12.367,ms,"同上；滤波段均值（含 P95 17.585 ms）",30 秒 / 一轮,metrics/logs/full_playback.csv
+整板 CPU 占用-平滑-ARM,系统,64.48,%,"/proc/stat 两端计数归一化 0-100%，含 Jupyter、网页等全部进程；iowait 计为空闲",30 秒 / 一轮,metrics/logs/full_playback.csv
+整板 CPU 占用-平滑-FPGA,系统,59.09,%,"同上；滤波移出 CPU 后的整板占用",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放丢帧数-平滑-ARM,系统,198,帧,"源素材 450 帧中未及时渲染的帧数（按已播音频采样调度跳帧）",30 秒 / 一轮,metrics/logs/full_playback.csv
+完整播放丢帧数-平滑-FPGA,系统,201,帧,"同上",30 秒 / 一轮,metrics/logs/full_playback.csv
+音频已播采样数,系统,1440127,样本,"硬件 FIFO 按 48 kHz 帧率消耗；与提交采样数对账",30 秒 / 一轮,metrics/logs/avsync_30s_playback.json
+音频欠载次数,系统,0,次,"FIFO 空即计一次欠载并终止会话；本轮会话 30 秒内为 0",30 秒 / 一轮,metrics/logs/avsync_30s_playback.json
+音画同步偏差,系统,-1.75,ms,"以已播采样为时间基准，HDMI 提交时间戳与对应音频时刻之差；不含显示器与扬声器物理时延",30 秒 / 一轮,metrics/logs/avsync_30s_playback.json
+FPGA 视频路径单次调用-优化后,性能,11.582,ms,"平滑 320x180；相对优化前 26.966 ms（缓冲区拷贝）与 22.236 ms（中间版本）",20 次重复 × 3 阶段,metrics/logs/fpga_video_path_evolution.json
+Slice LUT 占用,资源,8484,个,"Vivado 2024.1 布线后报告，XC7Z020CLG400-1，PL 100 MHz（占器件 15.95%）",一次最终构建,metrics/logs/ppa_evolution.csv
+寄存器占用,资源,9839,个,"同上（占器件 9.25%）",一次最终构建,metrics/logs/ppa_evolution.csv
+BRAM Tile 占用,资源,138,个,"同上，可用 140 个（占 98.57%），余量仅 2 个",一次最终构建,metrics/logs/ppa_evolution.csv
+DSP 占用,资源,4,个,"同上（占 1.82%）",一次最终构建,metrics/logs/ppa_evolution.csv
+时序 WNS,时序,0.202,ns,"Vivado 2024.1 布线后 timing.rpt，100 MHz 约束",一次最终构建,metrics/logs/ppa_evolution.csv
+时序 WHS,时序,0.018,ns,"同上",一次最终构建,metrics/logs/ppa_evolution.csv
+时序 TNS/THS,时序,0,ns,"同上；无负裕量累积",一次最终构建,metrics/logs/ppa_evolution.csv
